@@ -17,8 +17,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //declaramos los botones
         Button btnGuardar = (Button) findViewById(R.id.button);
         btnGuardar.setOnClickListener(this);
+
+        Button btnFin = (Button) findViewById(R.id.button2);
+        btnFin.setOnClickListener(this);
+
+        //cuando se pulsa el boton fianlizar jornada
+        btnFin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+
+                TextView txtRes2 = (TextView) findViewById(R.id.textView2);
+                //paramos el servicio
+                Intent i = new Intent(getApplicationContext(),ServicioSegundoPlano.class);
+                stopService(i);
+                //declaramos la fecha de hoy
+                int fecha = java.util.Calendar.getInstance().get(java.util.Calendar.DATE);
+                int mes = java.util.Calendar.getInstance().get(java.util.Calendar.MONTH);
+                int any = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
+                int hora = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
+                int minut = java.util.Calendar.getInstance().get(java.util.Calendar.MINUTE);
+                int segon = java.util.Calendar.getInstance().get(java.util.Calendar.SECOND);
+
+                //imprimimos
+                txtRes2.setText("Final de jornada a las :"+fecha+"/"+mes+"/"+any+" "+hora+":"+minut+":"+segon);
+
+
+            }
+        });
+
+
     }
 
     @Override
@@ -35,13 +66,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         db = usdbh.getWritableDatabase();
 
+        //hacemos una busqueda con los parametros que recojemos dekl usuario
         Cursor c = db.rawQuery("SELECT MATRICULA, PASSWORD FROM Login WHERE (MATRICULA = '" + editTextMatric.getText() + "') AND (PASSWORD = '" + editTextPass.getText() + "')", null);
         TextView txtResultado = (TextView) findViewById(R.id.txtResultado);
 
-        //if(c.getString(0).length()< 0) {
-        //  txtResultado.setText("La select no devuelve nada! D:");
-        //}
+
         TextView txtRes2 = (TextView) findViewById(R.id.textView2);
+        //si da algun resultsdo la busqueda
         if (c.moveToFirst()) {
             //Recorremos el cursor hasta que no haya mas registros
 
@@ -52,18 +83,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 if(cod.getBytes()!= null){
 
-                    txtRes2.setText("Usuario Logueado! :D");
+                    //declaramos la fecha de hoy para poder imprimir a la hora a ala que se hace la conexion
+                    int fecha = java.util.Calendar.getInstance().get(java.util.Calendar.DATE);
+                    int mes = java.util.Calendar.getInstance().get(java.util.Calendar.MONTH);
+                    int any = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
+                    int hora = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
+                    int minut = java.util.Calendar.getInstance().get(java.util.Calendar.MINUTE);
+                    int segon = java.util.Calendar.getInstance().get(java.util.Calendar.SECOND);
 
+                    txtRes2.setText("Usuario Correcto inicio de jornada a las :"+fecha+"/"+mes+"/"+any+" "+hora+":"+minut+":"+segon);
 
-                   //Intent i =new Intent(getApplicationContext(),ServicioSegundoPlano.class);
+                    //Hacemos un startService de la clase ServicioSegundoPlano
                     startService(new Intent(this, ServicioSegundoPlano.class));
-                    //startService(new Intent(MainActivity.this,
-                    //      ServicioSegundoPlano.class));
+
+
 
                 }
             } while (c.moveToNext());
+            //si en la consulta no hay nada imprimimos usuario incorrecto
         }else{
-            txtRes2.setText("usuario no logeado D:");
+            txtRes2.setText("usuario incorrecto");
 
         }
     }
