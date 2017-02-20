@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 
 public class BDAutobus extends SQLiteOpenHelper {
+    //hacemos un string con la sentencia sql para crear las tablas que necesitamos
     String localiz = "CREATE TABLE Localizacion (ID_LOC INTEGER, LATITUD INTEGER , LONGITUD INTEGER, FECHA TEXT, MATRICULA TEXT)";
     String login = "CREATE TABLE Login (MATRICULA TEXT, ID_LOG INTEGER , PASSWORD TEXT)";
 
@@ -19,9 +20,11 @@ public class BDAutobus extends SQLiteOpenHelper {
     }
 
     public void onCreate(SQLiteDatabase db){
+        //exeutamos las sentencias sql
         db.execSQL(localiz);
         db.execSQL(login);
 
+        //hacemos los registros de los autobuses para que puedan loguearse
         ContentValues nuevoRegistro = new ContentValues();
         nuevoRegistro.put("MATRICULA", "A00001");
         nuevoRegistro.put("ID_LOG", 1);
