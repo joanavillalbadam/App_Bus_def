@@ -189,10 +189,16 @@ public class ServicioSegundoPlano extends Service {
             HttpPost post = new HttpPost("http://192.168.120.74:8080/AutobusNetBeans/webresources/generic/insertLocalizacion");
             post.setHeader("content-type", "application/json");
             //recojemos las variables
+          int fecha = java.util.Calendar.getInstance().get(java.util.Calendar.DATE);
+            int mes = java.util.Calendar.getInstance().get(java.util.Calendar.MONTH);
+            int any = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
+            int hora = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
+            int minut = java.util.Calendar.getInstance().get(java.util.Calendar.MINUTE);
+            int segon = java.util.Calendar.getInstance().get(Calendar.SECOND);
             int x = cod++;
             double la =location.getLatitude() ;
             double lo =location.getLongitude();
-            String fe = "19/02/2017";
+            String fe = fecha+"/"+mes+"/"+any+" "+hora+":"+minut+":"+segon+"";
             String matr = "A0001";
 
             try {
