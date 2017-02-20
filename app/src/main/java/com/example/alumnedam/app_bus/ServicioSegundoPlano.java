@@ -10,11 +10,20 @@ import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.Toast;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
 
 import java.util.Calendar;
 
@@ -27,6 +36,9 @@ public class ServicioSegundoPlano extends Service {
     public LocationManager locationManager;
     public LocationListener locationListener;
     int cod;
+    Location location =
+            locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
     //Cursor c = db.rawQuery("SELECT , PASSWORD FROM Login WHERE (MATRICULA = '" + editTextMatric.getText() + "') AND (PASSWORD = '" + editTextPass.getText() + "')", null);;
     public void onCreate() {
 
@@ -36,24 +48,24 @@ public class ServicioSegundoPlano extends Service {
     }
 
     private void muestraPosicion(Location location) {
-        Toast.makeText(this, "Entro en muestra posicion",
-                Toast.LENGTH_SHORT).show();
-        if(location != null){
-            Toast.makeText(this, "muestraposicion if",
-                    Toast.LENGTH_SHORT).show();
+        //pido la latitud y la longitud
             Log.e("Latitud: ", "" + location.getLatitude());
             Log.e("Longitude: ", "" + location.getLongitude());
 
             SQLiteDatabase db;
+        //pedimos la fecha
             int fecha = Calendar.getInstance().get(Calendar.DATE);
             int mes = Calendar.getInstance().get(Calendar.MONTH);
             int any = Calendar.getInstance().get(Calendar.YEAR);
             int hora = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
             int minut = Calendar.getInstance().get(Calendar.MINUTE);
             int segon = Calendar.getInstance().get(Calendar.SECOND);
+            //introducimos la matricula
             String matric = "A00001";
+            //y el codigo que incrementaremos
             cod ++;
 
+        //Insertamos en la bd interna
             BDAutobus usdbh =
                     new BDAutobus(this,"BDAutobus", null, 1);
 
@@ -68,11 +80,11 @@ public class ServicioSegundoPlano extends Service {
 
             db.insert("Localizacion", null, nuevoRegistro);
 
-            Toast.makeText(this, "Insertado!A",
+            Toast.makeText(this, "Insertado en interna",
                     Toast.LENGTH_SHORT).show();
 
         }
-    }
+
 
 
     @Override
@@ -82,11 +94,10 @@ public class ServicioSegundoPlano extends Service {
         Toast.makeText(this,"Servicio arrancado "+ idArranque,
                Toast.LENGTH_SHORT).show();
         LocationManager myManager;
-        MyLocationListener loc;
+        //declaramos en location manager
         locationManager =
                 (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        Toast.makeText(this, "Antes del if",
-                Toast.LENGTH_SHORT).show();
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -97,57 +108,59 @@ public class ServicioSegundoPlano extends Service {
             // for ActivityCompat#requestPermissions for more details.
             return flags;
         }
-        Toast.makeText(this, "Despues del ifA3",
-                Toast.LENGTH_SHORT).show();
+
         Location location =
                 locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
         //Mostramos la última posición conocida
-        Toast.makeText(this, "antes de metodo",
-                Toast.LENGTH_SHORT).show();
+        //iniciamos el metodo muestraPosicion para hacer el insert en la interna
         muestraPosicion(location);
+        //iniciamos el metodo conexionExterna para hacer el insert en la externa
+        ConexionExterna con = new ConexionExterna();
+        con.execute();
 
         //Nos registramos para recibir actualizaciones de la posición
         locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
+                //cada vez que se cambie de posicion se iniciaran muestraposicion y cinexion externa
                 muestraPosicion(location);
+                ConexionExterna con = new ConexionExterna();
+                con.execute();
             }
             public void onProviderDisabled(String provider){
-                //lblEstado.setText("Provider OFF");
+
             }
             public void onProviderEnabled(String provider){
-                //lblEstado.setText("Provider ON");
+
             }
             public void onStatusChanged(String provider, int status, Bundle extras){
                 Log.i("LocAndroid", "Provider Status: " + status);
-                //lblEstado.setText("Provider Status: " + status);
+
             }
         };
 
+        //esperara un tiempo antes de volver a insertas
         locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER, 15000, 0, locationListener);
 
 
-        //onLocationChanged(Location location);
-
-
-        //reproductor.start();
-
-       // return START_STICKY;
 
         return flags;
     }
 
 
 
+
     @Override
 
     public void onDestroy() {
-
+    //cuando entramos aqui paramos el servicio en segundo plano
         Toast.makeText(this,"Servicio detenido",
                 Toast.LENGTH_SHORT).show();
-
-       //reproductor.stop();
+        super.onDestroy();
+        if(locationManager != null) {
+            locationManager.removeUpdates(locationListener);
+        }
 
     }
 
@@ -160,5 +173,73 @@ public class ServicioSegundoPlano extends Service {
                 Toast.LENGTH_SHORT).show();
         return null;
 
+    }
+
+
+    private class ConexionExterna extends AsyncTask<Void, Void, Boolean> {
+
+        protected Boolean doInBackground(Void... voids) {
+
+            //ponemos un boolean para comprobar si se insertan los datos
+
+            boolean resul = true;
+            //Inicializamos HttpClient
+            HttpClient httpClient = new DefaultHttpClient();
+            //Creamos un httpPost con el http://"mi web service rest"
+            HttpPost post = new HttpPost("http://192.168.120.74:8080/AutobusNetBeans/webresources/generic/insertLocalizacion");
+            post.setHeader("content-type", "application/json");
+            //recojemos las variables
+            int x = cod++;
+            double la =location.getLatitude() ;
+            double lo =location.getLongitude();
+            String fe = "19/02/2017";
+            String matr = "A0001";
+
+            try {
+
+                //Creamos el objeto JSON
+                JSONObject objson = new JSONObject();
+                //ponemos las variable en el objeto JSON
+
+                objson.put("ID_LOC", x);
+                objson.put("LATITUD",la);
+                objson.put("LONGITUD",lo);
+                objson.put("FECHA", fe);
+                objson.put("MATRICULA", matr);
+
+                //Pasamos el objeto JSON a String
+
+                     StringEntity entity = new StringEntity(objson.toString());
+                     post.setEntity(entity);
+
+                     //Ejecutamos el JSON
+                    HttpResponse resp = httpClient.execute(post);
+                //nos devolvera true o false que nos ara saber si se a insertado el insert into o no
+                    String respStr = EntityUtils.toString(resp.getEntity());
+                   // Si devuelve true sera igual true
+                    if (!respStr.equals("true")) {
+                        resul = true;
+                    }
+
+            } catch (Exception e) {
+
+                Log.e("ServicioRest", "Error!", e);
+                resul = false;
+            }
+            return resul;
+        }
+
+
+
+        protected void onPostExecute(Boolean result) {
+         //entrara aqui despues de el ... si es ture nos dira Insertado
+            if (result) {
+                Toast.makeText(ServicioSegundoPlano.this, "Insertado", Toast.LENGTH_SHORT).show();
+
+            } else {
+            //sino no insertado
+                Toast.makeText(ServicioSegundoPlano.this, "No Insertado", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }
