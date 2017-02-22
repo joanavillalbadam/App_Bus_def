@@ -35,9 +35,8 @@ public class ServicioSegundoPlano extends Service {
 
     public LocationManager locationManager;
     public LocationListener locationListener;
-    int cod;
-    Location location =
-            locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+    int cod = 20;
+
 
     //Cursor c = db.rawQuery("SELECT , PASSWORD FROM Login WHERE (MATRICULA = '" + editTextMatric.getText() + "') AND (PASSWORD = '" + editTextPass.getText() + "')", null);;
     public void onCreate() {
@@ -72,11 +71,11 @@ public class ServicioSegundoPlano extends Service {
             db = usdbh.getWritableDatabase();
 
             ContentValues nuevoRegistro = new ContentValues();
-            nuevoRegistro.put("ID_LOC", cod);
-            nuevoRegistro.put("LATITUD", location.getLatitude());
-            nuevoRegistro.put("LONGITUD", location.getLongitude());
-            nuevoRegistro.put("FECHA", fecha+"/"+mes+"/"+any+" "+hora+":"+minut+":"+segon);
-            nuevoRegistro.put("MATRICULA", matric);
+            nuevoRegistro.put("idloc", cod);
+            nuevoRegistro.put("latitud", location.getLatitude());
+            nuevoRegistro.put("longitud", location.getLongitude());
+            nuevoRegistro.put("fecha", fecha+"/"+mes+"/"+any+" "+hora+":"+minut+":"+segon);
+            nuevoRegistro.put("matricula", matric);
 
             db.insert("Localizacion", null, nuevoRegistro);
 
@@ -114,10 +113,10 @@ public class ServicioSegundoPlano extends Service {
 
         //Mostramos la última posición conocida
         //iniciamos el metodo muestraPosicion para hacer el insert en la interna
-        muestraPosicion(location);
+   //     muestraPosicion(location);
         //iniciamos el metodo conexionExterna para hacer el insert en la externa
-        ConexionExterna con = new ConexionExterna();
-        con.execute();
+    //    ConexionExterna con = new ConexionExterna();
+     //   con.execute();
 
         //Nos registramos para recibir actualizaciones de la posición
         locationListener = new LocationListener() {
@@ -195,6 +194,9 @@ public class ServicioSegundoPlano extends Service {
             int hora = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
             int minut = java.util.Calendar.getInstance().get(java.util.Calendar.MINUTE);
             int segon = java.util.Calendar.getInstance().get(Calendar.SECOND);
+
+            Location location =
+                    locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             int x = cod++;
             double la =location.getLatitude() ;
             double lo =location.getLongitude();
@@ -207,11 +209,11 @@ public class ServicioSegundoPlano extends Service {
                 JSONObject objson = new JSONObject();
                 //ponemos las variable en el objeto JSON
 
-                objson.put("ID_LOC", x);
-                objson.put("LATITUD",la);
-                objson.put("LONGITUD",lo);
-                objson.put("FECHA", fe);
-                objson.put("MATRICULA", matr);
+                objson.put("idloc", x);
+                objson.put("latitud",la);
+                objson.put("longitud",lo);
+                objson.put("fecha", fe);
+                objson.put("matricula", matr);
 
                 //Pasamos el objeto JSON a String
 
@@ -223,8 +225,11 @@ public class ServicioSegundoPlano extends Service {
                 //nos devolvera true o false que nos ara saber si se a insertado el insert into o no
                     String respStr = EntityUtils.toString(resp.getEntity());
                    // Si devuelve true sera igual true
-                    if (!respStr.equals("true")) {
+                    if (respStr.equals("true")) {
                         resul = true;
+                    } else {
+
+                        resul=false;
                     }
 
             } catch (Exception e) {

@@ -51,16 +51,6 @@
         android:layout_marginTop="19dp"
         android:id="@+id/textView" />
 
-    <Button
-        android:text="pulsame :D"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/button"
-        android:layout_below="@+id/editText"
-        android:layout_alignRight="@+id/txtResultado"
-        android:layout_alignEnd="@+id/txtResultado"
-        android:layout_marginTop="21dp" />
-
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -71,4 +61,27 @@
         android:layout_marginEnd="18dp"
         android:layout_marginTop="50dp"
         android:id="@+id/textView2" />
+
+
+    <Button
+        android:text="Iniciar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/button"
+        android:layout_marginTop="17dp"
+        android:layout_below="@+id/editText"
+        android:layout_alignRight="@+id/textView"
+        android:layout_alignEnd="@+id/textView"
+        android:layout_marginRight="25dp"
+        android:layout_marginEnd="25dp" />
+
+    <Button
+        android:text="Finalizar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/button2"
+        android:layout_alignParentBottom="true"
+        android:layout_alignRight="@+id/button"
+        android:layout_alignEnd="@+id/button"
+        android:layout_marginBottom="55dp" />
 </RelativeLayout>
